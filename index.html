@@ -55,7 +55,6 @@ main{max-width:520px;margin:0 auto;padding:36px 16px 90px}
 /* floating */
 .fab{position:fixed;right:14px;z-index:10;width:46px;height:46px;border-radius:50%;border:0;background:var(--pink);color:#fff;font-size:20px;cursor:pointer;box-shadow:0 4px 14px #b8578a66}
 #musicBtn{bottom:calc(16px + env(safe-area-inset-bottom,0px))}
-#editBtn{bottom:calc(72px + env(safe-area-inset-bottom,0px));background:#fff;color:var(--ink)}
 #musicBtn.on{animation:spin 4s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 /* panel */
@@ -108,42 +107,14 @@ main{max-width:520px;margin:0 auto;padding:36px 16px 90px}
   </section>
 </main>
 
-<button class="fab" id="editBtn" aria-label="Edit undangan">✎</button>
 <button class="fab" id="musicBtn" aria-label="Putar musik">♪</button>
 
-<aside id="panel" aria-label="Edit undangan">
-  <h3>Edit undangan</h3>
-  <label for="fLead">Kalimat pembuka</label><textarea id="fLead" rows="2"></textarea>
-  <div class="row">
-    <div><label for="fName">Nama</label><input id="fName"></div>
-    <div><label for="fAge">Judul acara</label><input id="fAge"></div>
-  </div>
-  <div class="row">
-    <div><label for="fDate">Tanggal</label><input id="fDate" type="date"></div>
-    <div><label for="fTime">Jam</label><input id="fTime" type="time"></div>
-  </div>
-  <label for="fPlace">Alamat</label><input id="fPlace">
-  <label for="fDress">Dress code</label><input id="fDress">
-  <label for="fMsg">Pesan penutup</label><input id="fMsg">
-  <label for="fWa">Nomor WhatsApp untuk RSVP</label><input id="fWa" inputmode="tel" placeholder="62812xxxxxxx">
-  <label for="fSong">Lagu sendiri (MP3)</label><input id="fSong" type="file" accept="audio/*">
-  <small>Tanpa file, yang diputar adalah music/lagu.mp3 dari repo (jika ada), lalu melodi kotak musik sebagai cadangan.</small>
-  <label for="fRecap">Rekap kehadiran</label><textarea id="fRecap" rows="4" placeholder="Tempel semua pesan RSVP dari WhatsApp di sini"></textarea>
-  <button class="btn alt" id="recapBtn" type="button" style="margin-top:8px">Hitung tamu</button>
-  <div id="recapOut" aria-live="polite"></div>
-  <div class="acts">
-    <button class="btn" id="saveBtn">Simpan</button>
-    <button class="btn alt" id="closeBtn">Tutup</button>
-    <button class="btn alt" id="resetBtn">Reset</button>
-  </div>
-</aside>
 
 <audio id="audio" loop preload="auto"></audio>
 <script>
 (function(){
-var DEF={lead:"Ada bab baru yang mau dirayakan,\ndan kamu masuk daftar tamunya.\nDatang ya ke",name:"Elva's",age:"Sweet 17",date:"2026-10-03",time:"",dress:"hitam putih",place:"Jl. Pancawarga V Gg. 14 No. 26",msg:"Sampai ketemu di sana ♡",wa:""};
-var KEY="undangan-elva-v3",D=Object.assign({},DEF);
-try{var s=localStorage.getItem(KEY);if(s)D=Object.assign(D,JSON.parse(s));}catch(e){}
+var DEF={lead:"Hi, you're invited to",name:"Elva's",age:"Sweet 17",date:"2026-10-03",time:"19:00",dress:"hitam putih",place:"Jl. Pancawarga V Gg. 14 No. 26",msg:"Sampai ketemu di sana ♡",wa:"6287765758474"};
+var D=Object.assign({},DEF);
 var $=function(i){return document.getElementById(i)};
 function esc(t){return String(t).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
 var BLN=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
@@ -152,7 +123,7 @@ function render(){
   $('tName').textContent=D.name;$('tAge').textContent=D.age;
   $('cvName').textContent=D.name+" "+D.age;
   var p=D.date.split('-'),ds=p.length==3?parseInt(p[2],10)+" "+BLN[+p[1]-1]+" "+p[0]:"";
-  $('tWhen').innerHTML=esc(ds+(D.time?" | "+D.time+" WIB":""))+"<br>"+esc(D.place);
+  $('tWhen').innerHTML=esc(ds+(D.time?" | "+D.time.replace(":",".")+" WIB":""))+"<br>"+esc(D.place);
   $('tMsg').textContent=D.msg;
   var dd=$('tDress');dd.textContent="Dress code: "+D.dress;
   if(/hitam/i.test(D.dress)&&/putih/i.test(D.dress)){dd.insertAdjacentHTML('beforeend','<span class="dots" aria-hidden="true"><i></i><i></i></span>')}
@@ -169,18 +140,6 @@ function tick(){
   c.innerHTML=v.map(function(x){return"<div><b>"+x[0]+"</b>"+x[1]+"</div>"}).join("");
 }
 setInterval(tick,1000);render();
-
-/* panel */
-var pm={fLead:'lead',fName:'name',fAge:'age',fDate:'date',fTime:'time',fPlace:'place',fDress:'dress',fMsg:'msg',fWa:'wa'};
-function fill(){for(var k in pm)$(k).value=D[pm[k]]||""}
-$('editBtn').onclick=function(){fill();$('panel').classList.add('open')};
-$('closeBtn').onclick=function(){$('panel').classList.remove('open')};
-$('saveBtn').onclick=function(){
-  for(var k in pm)D[pm[k]]=$(k).value;
-  try{localStorage.setItem(KEY,JSON.stringify(D))}catch(e){}
-  render();$('panel').classList.remove('open');
-};
-$('resetBtn').onclick=function(){D=Object.assign({},DEF);try{localStorage.removeItem(KEY)}catch(e){}fill();render()};
 
 /* rsvp */
 function attVal(){return document.querySelector('input[name=att]:checked').value}
@@ -202,16 +161,6 @@ $('rCopy').onclick=function(){
   try{if(navigator.clipboard)navigator.clipboard.writeText(t.value)}catch(e){}
   try{document.execCommand('copy')}catch(e){}
   $('rNote').textContent="Pesan disalin. Tempel dan kirim ke WhatsApp tuan rumah ya.";
-};
-$('recapBtn').onclick=function(){
-  var t=$('fRecap').value,re=/Nama:\s*([^\n]*)\n\s*Kehadiran:\s*(Tidak hadir|Hadir)(?:\s*\n\s*Jumlah:\s*(\d+))?/gi,m,seen={},hd=0,org=0,no=0;
-  while((m=re.exec(t))){
-    var k=m[1].trim().toLowerCase(),hadir=/^hadir$/i.test(m[2]);
-    if(seen[k]){ if(seen[k].h){hd-=1;org-=seen[k].c}else no-=1 }
-    var c=hadir?(parseInt(m[3],10)||1):0;seen[k]={h:hadir,c:c};
-    if(hadir){hd+=1;org+=c}else no+=1;
-  }
-  $('recapOut').textContent="Hadir: "+org+" orang ("+hd+" konfirmasi) · Tidak hadir: "+no;
 };
 
 /* music */
@@ -247,10 +196,6 @@ function start(){
 }
 function stop(){a.pause();stopFlag=true;clearTimeout(timer);playing=false;mb.classList.remove('on')}
 mb.onclick=function(){playing?stop():start()};
-$('fSong').onchange=function(e){
-  var f=e.target.files[0];if(!f)return;
-  var was=playing;stop();repoSong=false;a.src=URL.createObjectURL(f);useFile=true;if(was)start();
-};
 $('openBtn').onclick=function(){$('cover').classList.add('gone');if(!playing)start()};
 })();
 </script>
